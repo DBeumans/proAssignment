@@ -4,32 +4,70 @@ using UnityEngine.UI;
 
 public class ChangeImage : MonoBehaviour
 {
-	[SerializeField] private Sprite[] images; 
-	[SerializeField] private Image display;
+	[SerializeField] private Texture[] images; 
+	[SerializeField] private RawImage display;
+	private MovAud playAud;
 	private int i;
+	private float timer;
+	private bool yes;
 	private void Start()
 	{
+		playAud = GetComponent<MovAud> ();
 		i = 0;
-		display.sprite = images [i];
-
+		yes = true;
+		timer = 20f;
+		display.texture = images [i];
+		StartCoroutine (Auto());
 	}
 	public void NextImage ()
 	{
 		i++;
+		Check ();
+		timer = 20f;
+	}
+	private void Check()
+	{
 		if (i > images.Length - 1)
 		{
 			i = 0;
 		}
-		display.sprite = images [i];
+		if(i<0)
+		{
+			i=images.Length-1;
+		}
+		if (images [i].GetType () == typeof(MovieTexture))
+		{
+			MovieTexture currentSlide = (MovieTexture)images [i];
+			display.texture = currentSlide;
+			currentSlide.Play ();
+			playAud.PlayAudio (currentSlide.audioClip);
+			currentSlide.loop = true;
+		} else
+		{
+			playAud.StopAudio ();
+		}
+		display.texture = images [i];
 	}
 
 	public void PreviousImage()
 	{
 		i--;
-		if(i<0)
+		Check ();
+		timer = 20f;
+	}
+
+	IEnumerator Auto ()
+	{
+		while (yes)
 		{
-			i=images.Length-1;
+			timer -= Time.deltaTime;
+			if (timer <= 0)
+			{
+				i++;
+				Check ();
+				timer = 20f;
+			}
+			yield return null;
 		}
-		display.sprite = images[i];
 	}
 }
